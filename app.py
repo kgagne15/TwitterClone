@@ -3,9 +3,9 @@ import os
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
-
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, EditUserProfileForm
 from models import db, connect_db, User, Message
+# from warbler.forms import EditUserProfileForm
 
 CURR_USER_KEY = "curr_user"
 
@@ -214,8 +214,27 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
+    form = EditUserProfileForm()
 
-    # IMPLEMENT THIS
+    if not g.user:
+        flash('Access unauthorized', 'danger')
+        return redirect('/')
+    old_username = g.user.username
+
+    if form.validate_on_submit() and User.authenticate(old_username, form.password.data) != False:
+        g.user.bio = form.bio.data or g.user.bio
+        g.user.username = form.username.data or g.user.username
+        g.user.email = form.email.data or g.user.email
+        g.user.image_url = form.image_url.data or g.user.image_url
+        g.user.header_image_url = form.header_image_url.data or g.user.header_image_url
+        db.session.add(g.user)
+        db.session.commit()
+        return redirect(f'/users/{g.user.id}')
+    elif form.validate_on_submit() and User.authenticate(old_username, form.password.data) == False:
+        flash("You are not authorized to change this profile")
+        return redirect('/')
+    else:
+        return render_template('users/edit.html', form=form, user=g.user)
 
 
 @app.route('/users/delete', methods=["POST"])
