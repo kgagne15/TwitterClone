@@ -145,13 +145,16 @@ def users_show(user_id):
 
     # snagging messages in order from the database;
     # user.messages won't be in order by default
+    bio = user.bio
+    location = user.location
+    header = user.header_image_url
     messages = (Message
                 .query
                 .filter(Message.user_id == user_id)
                 .order_by(Message.timestamp.desc())
                 .limit(100)
                 .all())
-    return render_template('users/show.html', user=user, messages=messages)
+    return render_template('users/show.html', user=user, messages=messages, bio=bio, location=location, header=header)
 
 
 @app.route('/users/<int:user_id>/following')
