@@ -4,7 +4,7 @@ from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, MessageForm, EditUserProfileForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Likes
 # from warbler.forms import EditUserProfileForm
 
 CURR_USER_KEY = "curr_user"
@@ -301,6 +301,14 @@ def messages_destroy(message_id):
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}")
+
+@app.route('/users/add_like/<int:msg_id>', methods=['POST'])
+def like_messages(msg_id):
+    flash(f'You liked message: {msg_id}')
+    like = Likes(user_id=g.user.id, message_id=msg_id)
+    db.session.add(like)
+    db.session.commit()
+    return redirect (f'/users/{g.user.id}')
 
 
 ##############################################################################
