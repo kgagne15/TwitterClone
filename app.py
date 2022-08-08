@@ -145,12 +145,13 @@ def users_show(user_id):
 
     # snagging messages in order from the database;
     # user.messages won't be in order by default
+    # print(user.following)
     bio = user.bio
     location = user.location
     header = user.header_image_url
     messages = (Message
                 .query
-                .filter(Message.user_id == user_id)
+                .filter(Message.user_id == user.id)
                 .order_by(Message.timestamp.desc())
                 .limit(100)
                 .all())
@@ -315,12 +316,15 @@ def homepage():
     """
 
     if g.user:
+        following = []
+        for u in g.user.following:
+            following.append(u.id)
         messages = (Message
-                    .query
-                    .order_by(Message.timestamp.desc())
-                    .limit(100)
-                    .all())
-
+                .query
+                .filter(Message.user_id.in_(following))
+                .order_by(Message.timestamp.desc())
+                .limit(100)
+                .all())
         return render_template('home.html', messages=messages)
 
     else:
