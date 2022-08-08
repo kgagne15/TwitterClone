@@ -310,6 +310,17 @@ def like_messages(msg_id):
     db.session.commit()
     return redirect (f'/users/{g.user.id}')
 
+@app.route('/users/<int:user_id>/likes')
+def show_likes(user_id):
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+    
+    likes = g.user.likes
+
+    return render_template('users/likes.html', likes=likes)
+
+
 
 ##############################################################################
 # Homepage and error pages
