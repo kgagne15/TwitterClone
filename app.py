@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, render_template, request, flash, redirect, session, g
+from flask import Flask, render_template, request, flash, redirect, session, g, abort
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from forms import UserAddForm, LoginForm, MessageForm, EditUserProfileForm
@@ -304,11 +304,29 @@ def messages_destroy(message_id):
 
 @app.route('/users/add_like/<int:msg_id>', methods=['POST'])
 def like_messages(msg_id):
-    flash(f'You liked message: {msg_id}')
-    like = Likes(user_id=g.user.id, message_id=msg_id)
-    db.session.add(like)
+
+    #**************************************************************************
+    #Used solution
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    liked_msg = Message.query.get_or_404(msg_id)
+    if liked_msg.user_id == g.user.id:
+        return abort(403)
+    
+    user_likes = g.user.likes
+
+    if liked_msg in user_likes:
+        g.user.likes = [like for like in user_likes if like != liked_msg]
+    else:
+        g.user.likes.append(liked_msg)
+    
     db.session.commit()
-    return redirect (f'/users/{g.user.id}')
+
+    return redirect('/')
+    #*****************************************************************************
 
 @app.route('/users/<int:user_id>/likes')
 def show_likes(user_id):
@@ -316,9 +334,13 @@ def show_likes(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
     
-    likes = g.user.likes
+    user = User.query.get_or_404(user_id)
 
-    return render_template('users/likes.html', likes=likes)
+    likes = user.likes
+    
+
+
+    return render_template('users/likes.html', likes=likes, user=user)
 
 
 
