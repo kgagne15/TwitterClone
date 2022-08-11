@@ -2,14 +2,16 @@
 
 # run these tests like:
 #
+
 #    FLASK_ENV=production python -m unittest test_user_views.py
+
 
 
 import os
 from unittest import TestCase
 
-from models import db, connect_db, Message, User, Likes, Follows
 
+from models import db, connect_db, Message, User, Likes, Follows
 
 # BEFORE we import our app, let's set an environmental variable
 # to use a different database for tests (we need to do this
@@ -40,8 +42,10 @@ class UserViewTestCase(TestCase):
     def setUp(self):
         """Create test client, add sample data."""
 
+
         db.drop_all()
         db.create_all()
+
 
         self.client = app.test_client()
 
@@ -49,6 +53,7 @@ class UserViewTestCase(TestCase):
                                     email="test@test.com",
                                     password="testuser",
                                     image_url=None)
+
         self.testuser_id = 8989
         self.testuser.id = self.testuser_id
 
@@ -193,3 +198,6 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn("Access unauthorized", str(resp.data))
+
+
+     
