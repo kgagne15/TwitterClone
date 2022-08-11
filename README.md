@@ -1,4 +1,4 @@
-## Twitter Clone
+# Twitter Clone
 
 ## Setup app: 
 python -m venv venv
