@@ -7,6 +7,7 @@
 
 import os
 from unittest import TestCase
+from sqlalchemy import orm, exc
 
 from models import db, connect_db, Message, User
 
@@ -49,6 +50,7 @@ class MessageViewTestCase(TestCase):
                                     password="testuser",
                                     image_url=None)
 
+
         db.session.commit()
 
     def test_add_message(self):
@@ -71,3 +73,49 @@ class MessageViewTestCase(TestCase):
 
             msg = Message.query.one()
             self.assertEqual(msg.text, "Hello")
+    
+    def test_add_no_session(self):
+        with self.client as c:
+            resp = c.post('/messages/new', data={'text': 'Hello'})
+            self.assertEqual(resp.status_code, 302)
+            
+            
+            with self.assertRaises(orm.exc.NoResultFound) as context:
+                Message.query.one()
+
+             
+    def test_delete_msg_logged_in(self):
+        with self.client as c: 
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.testuser.id
+            
+            msg = Message(
+                text="TEST TEST TEST",
+                user_id=self.testuser.id,
+                timestamp=None
+            )
+            db.session.add(msg)
+            db.session.commit()
+            msg.id = 999
+
+            resp = c.post('/messages/999/delete')
+            self.assertEqual(resp.status_code, 302)
+            self.assertIsNone(Message.query.get(msg.id))
+    
+    def test_delete_msg_logged_out(self):
+        with self.client as c: 
+            
+            msg = Message(
+                text="TEST TEST TEST",
+                user_id=self.testuser.id,
+                timestamp=None
+            )
+            db.session.add(msg)
+            db.session.commit()
+            msg.id = 999
+
+            resp = c.post('/messages/999/delete')
+            self.assertEqual(resp.status_code, 302)
+            self.assertEqual(msg.text, 'TEST TEST TEST')
+            self.assertIsNotNone(Message.query.get(msg.id))
+            
