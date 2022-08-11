@@ -30,7 +30,9 @@ from app import app
 db.create_all()
 
 
-class UserModelTestCase(TestCase):
+
+class MessageModelTestCase(TestCase):
+
     """Test views for messages."""
 
     def setUp(self):
